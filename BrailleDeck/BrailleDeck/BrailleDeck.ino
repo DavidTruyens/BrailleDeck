@@ -8,37 +8,32 @@
 Breadboard pin's (using the RS50 connector numbers)
 10 GND
 4 is pulled low when the board is connected (so it becomes a second gnd)
-Key1 = 1
-Key2 = 3
-Key3 = 5
-Key4 = 7
-Key5 = 9
-Key6 = 8
+
+Perkings PinNr	->		Uno PinNr
+	Key1 = 1	->		 4
+	Key2 = 3	->		 5
+	Key3 = 5	->		 7
+	Key4 = 7	->		 9
+	Key5 = 9	->		 11
+	Key6 = 8	->		 10
 
 These key's use the 4 pin as their GND
-Enter = 1
-Space = 6
-Backspace = 3
+Enter = 1 (unopin 4)
+Backspace = 3 (unopin 5)
+Space = 6 (unopin 8)
 
 Pin 2 is not used
 
-Perkings to Uno Pins
-1 - 4
-3 - 5
-4 - 6
-5 - 7
-6 - 8
-7 - 9
-8 - 10
-9 - 11
-10 - GND
 */
 
-int Keys[8] = {4,5,6,7,8,9,10,11};
-int ButtonStates[9] = { 0,0,0,0,0,0,0,0 };
+int Spacepin = 8;
+int Enterpin = 4;
+int Backpin = 5;
 
-unsigned long seconds = 0;
-bool Debug = false;
+int Keypins[6] = { 4,5,7,9,11,10 };
+const int PowerTwo[6] = { 1,2,4,8,16,32 };
+
+char BailleABC[73] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRST";
 
 void setup() {
 	// put your setup code here, to run once:
@@ -63,97 +58,91 @@ void setup() {
 	Serial.println("");
 	Serial.println("connected!");
 
-	//for (int State = 1; State <= 8; State++) {
-	//	ButtonStates[State] = digitalRead(Keys[State]);
-	//	Serial.print(ButtonStates[State]);
-	//}
-
-	//seconds = millis();
-
 }
 
-unsigned long timelapse;
-int BtPressed[9] = { 0,0,0,0,0,0,0,0 };
-bool ButtonPressed = false;
+bool Nobuttons = true;
 
-char BailleABC[73] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRST";
-int Recordings[6] = { 0,0,0,0,0,0 };
-int Recording = 0;
-int Recordcheck = 0;
+int EnterPreviousState = HIGH;
+int BackPreviousState = HIGH;
 
 void loop() {
 	//Check connection
 	CheckConnection();
 
 	//Check space, enter and backspace
+	if (Nobuttons) {
+		Nobuttons = CheckEnterSpaceBack();
+	}
+	else {
+		CheckButtons();
+	}
 
-	//if space check for other buttons
-
-	//if number record number
-
-	//Recording = CheckButtons();
-	//// record buttons
-	//while (Recording == 1) {
-	//	ButtonPressed = true;
-	//	for (int State = 1; State < 9; State++) {
-	//		ButtonStates[State] = digitalRead(Keys[State]);
-	//		if (ButtonStates[State] = 0) {
-	//			Recordings[State] = 1;
-	//		}
-	//		else {
-	//			Recordcheck = 0;
-	//		}
-	//	}
-
-	//	if (Recordcheck == 0) {
-	//		Recording = 0;
-	//	}
-	//}
-
-	//int Index = 0;
-
-	//if (ButtonPressed) {
-	//	ButtonPressed = false;
-	//	//enter
-	//	if (Recordings[7] == 1) {
-	//		Serial.println("");
-	//	}
-	//	//backspace
-	//	else if (Recordings[8] == 1) {
-	//		Serial.print("backspace");
-	//	}
-	//	else {
-	//		for (int j = 1; j < 7; j++) {
-	//			Index = Index + Recordings[j] * pow(2, j);
-	//			Recordings[j] = 0;
-	//		}
-	//		if (Index == 0) {
-	//			Serial.print(" ");
-	//		}
-	//		else {
-	//			Serial.print(BailleABC[Index]);
-	//		}
-	//	}
-	//}
-
-	//// debug
-	//timelapse = millis() - seconds;
-	//if (timelapse >= 1000) {
-	//	seconds = millis();
-	//}
 }
 
-int PressCheck = 0;
-int CheckButtons() {
-	// check buttons
-	for (int State = 1; State < 9; State++) {
-		ButtonStates[State] = digitalRead(Keys[State]);
-		if (ButtonStates[State] == 0) {
-			PressCheck = 1;
-			break;
+
+
+void CheckButtons() {
+	bool ButtonTrigger = true;
+	int KeyRecordings[6] = { 0,0,0,0,0,0 };
+	int SpaceButton = HIGH;
+	int Lowtest = HIGH;
+	bool ButtonPressed = true;
+
+	int BrailleCounter = 0;
+
+	while (ButtonTrigger) {
+		
+		ButtonPressed = false;
+		delay(100);
+
+		SpaceButton = digitalRead(Spacepin);
+		
+		if (SpaceButton == LOW) {
+			/*Serial.print("spacebuttonstate: ");
+			Serial.println(SpaceButton);*/
+			ButtonPressed = true;
 		}
+
+		for (int i = 0; i <= 5; i++) {
+			Lowtest = digitalRead(Keypins[i]);
+		
+			if (Lowtest == LOW) {
+				KeyRecordings[i] = 1;
+				ButtonPressed = true;
+			}
+		}
+
+		if (ButtonPressed) {
+			ButtonTrigger = true;
+		}
+		else {
+			ButtonTrigger = false;
+		}
+		
+		//Serial.print(".");
 	}
-	return PressCheck;
+	Nobuttons = true;
+
+	//Serial.println("x");
+	int BrailleIndex = 0;
+
+	for (BrailleCounter = 0; BrailleCounter<= 5; BrailleCounter++) {
+		//Serial.print(KeyRecordings[BrailleCounter]);
+		BrailleIndex = BrailleIndex + KeyRecordings[BrailleCounter] * PowerTwo[BrailleCounter];
+		/*Serial.print(",");
+		Serial.println(BrailleIndex);*/
+	}
+
+	if (BrailleIndex == 0) {
+		Serial.print(" ");
+	}
+	else {	
+		BrailleIndex--;
+		/*Serial.print("Braille index: ");
+		Serial.println(BrailleIndex);*/
+		Serial.print(BailleABC[BrailleIndex]);
+	}
+
 }
 
 int ConnectionChecker = HIGH;
@@ -163,14 +152,37 @@ void CheckConnection() {
 		Serial.println("Connection Lost");
 	}
 }
-void DebugPrint(String msg) {
-	if (Debug) {
-		Serial.print(msg);
-	}
-}
 
-void DebugPrintLN(String msg) {
-	if (Debug) {
-		Serial.println(msg);
+int SpaceKey = HIGH;
+int EnterKey = HIGH;
+int BackKey = HIGH;
+
+bool CheckEnterSpaceBack(){
+	SpaceKey = digitalRead(Spacepin);
+	EnterKey = digitalRead(Enterpin);
+	BackKey = digitalRead(Backpin);
+
+	delay(50);
+
+	if (SpaceKey == LOW ) {
+		return false;
+	}
+	else if (EnterKey != EnterPreviousState) {
+		EnterPreviousState = EnterKey;
+		if (EnterKey == LOW) {
+			Serial.println("");
+		}
+		
+		return true;
+	}
+	else if (BackKey != BackPreviousState) {
+		BackPreviousState = BackKey;
+		if (BackKey == LOW) {
+			Serial.print("BACK");
+		}
+		return true;
+	}
+	else {
+		return true;
 	}
 }
