@@ -37,6 +37,8 @@ char BailleABC[73] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRST";
 
 void setup() {
 	// put your setup code here, to run once:
+	pinMode(13, OUTPUT);
+	digitalWrite(13, LOW);
 	Serial.begin(9600);
 	
 	for (int PinNr = 4; PinNr <= 11; PinNr++) {
@@ -53,6 +55,7 @@ void setup() {
 		}
 		else {
 			connected = true;
+			digitalWrite(13, HIGH);
 		}
 	}
 	Serial.println("");
@@ -150,6 +153,10 @@ void CheckConnection() {
 	ConnectionChecker = digitalRead(6);
 	if (ConnectionChecker==HIGH) {
 		Serial.println("Connection Lost");
+		digitalWrite(13, LOW);
+	}
+	else {
+		digitalWrite(13, HIGH);
 	}
 }
 
