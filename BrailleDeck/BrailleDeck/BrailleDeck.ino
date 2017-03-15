@@ -33,8 +33,10 @@ int Backpin = 5;
 int Keypins[6] = { 4,5,7,9,11,10 };
 const int PowerTwo[6] = { 1,2,4,8,16,32 };
 
-char BailleABC[73] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRST";
-
+//full list of characters; but specials are not working, so they're replaced with # as well as blanks 
+//char BailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq#â?ê-u(v#îöë#xèç#û.ü)z=à#ôwï#yùé";
+char BailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq##?#-u(v#####x####.#)z=###w##y##";
+ 
 void setup() {
 	// put your setup code here, to run once:
 	pinMode(13, OUTPUT);
@@ -64,7 +66,7 @@ void setup() {
 }
 
 bool Active = false;
-
+ 
 int EnterPreviousState = HIGH;
 int BackPreviousState = HIGH;
 
@@ -123,18 +125,16 @@ void CheckButtons() {
 		else {
 			ButtonTrigger = false;
 		}
-		//Serial.print(".");
 	}
 	Active = false;
 
-	//Serial.println("x");
 	int BrailleIndex = 0;
 
 	for (BrailleCounter = 0; BrailleCounter <= 5; BrailleCounter++) {
-		//Serial.print(KeyRecordings[BrailleCounter]);
+		Serial.print(KeyRecordings[BrailleCounter]);
 		BrailleIndex = BrailleIndex + KeyRecordings[BrailleCounter] * PowerTwo[BrailleCounter];
-		/*Serial.print(",");
-		Serial.println(BrailleIndex);*/
+		Serial.print(",");
+		Serial.println(BrailleIndex);
 	}
 
 	if (BrailleIndex == 0) {
