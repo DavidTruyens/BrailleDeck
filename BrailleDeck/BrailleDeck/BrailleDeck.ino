@@ -9,13 +9,25 @@ Breadboard pin's (using the RS50 connector numbers)
 10 GND
 4 is pulled low when the board is connected (so it becomes a second gnd)
 
-Perkings PinNr	->		Uno PinNr
-	Key1 = 1	->		 4
-	Key2 = 3	->		 5
-	Key3 = 5	->		 7
-	Key4 = 7	->		 9
-	Key5 = 9	->		 11
-	Key6 = 8	->		 10
+Perkings PinNr			->		Uno PinNr			M0 PinNr
+	Key1		= 1		->		4					5
+	Key2		= 3		->		5					6
+	Key3		= 5		->		7					9
+	Key4		= 7		->		9					10
+	Key5		= 9		->		11					11
+	Key6		= 8		->		10					12
+	Space		= 6		->		8					A2/16
+	Conection	= 4		->		6					A1/15
+	GND			= 10	->		GND					GND
+	
+LCD and RTC			SDA and SLC
+SD Card				SCK, MOSI and MISO
+
+Buttons
+	UP							-					A3/17
+	Down						-					A4/18
+
+Buzzer							-					A5/19
 
 These key's use the 4 pin as their GND
 Enter = 1 (Shared with Key1)
@@ -32,11 +44,16 @@ Pin 2 is not used
 // Connect via i2c, default address #0 (A0-A2 not jumpered)
 Adafruit_LiquidCrystal lcd(0);
 
-int Spacepin = 8;
-int Enterpin = 4;
-int Backpin = 5;
+//Uno Pins
+//int Spacepin = 8;
+//int ConnectionPin = 6;
+//int Keypins[6] = { 4,5,7,9,11,10 };
 
-int Keypins[6] = { 4,5,7,9,11,10 };
+//M0 Pins
+int Spacepin = 16;
+int ConnectionPin = 15;
+int Keypins[6] = { 5,6,9,10,11,12 };
+
 const int PowerTwo[6] = { 1,2,4,8,16,32 };
 
 //full list of characters; but specials are not working, so they're replaced with # as well as blanks 
@@ -81,27 +98,24 @@ bool Active = false;
  
 int EnterPreviousState = HIGH;
 int BackPreviousState = HIGH;
+
 bool Caps = false;
 bool CapsPermanent = false;
 bool Number = false;
 
 void loop() {
-	//Check connection
 	CheckConnection();
 
-	//Check space, enter and backspace
 	if (Active) {
 		CheckButtons();
 	}
 	else {
 		Active = CheckActivity();
 	}
-
 }
 
 int RowNR = 0;
 int PosNR = 0;
-
 void CheckButtons() {
 	bool ButtonTrigger = true;
 	int KeyRecordings[6] = { 0,0,0,0,0,0 };
@@ -215,7 +229,6 @@ void CheckButtons() {
 }
 
 int Activitytest = HIGH;
-
 bool CheckActivity() {
 	for (int i = 0; i <= 5; i++) {
 		Activitytest = digitalRead(Keypins[i]);
@@ -234,7 +247,7 @@ bool CheckActivity() {
 
 int ConnectionChecker = HIGH;
 void CheckConnection() {
-	ConnectionChecker = digitalRead(6);
+	ConnectionChecker = digitalRead(ConnectionPin);
 	if (ConnectionChecker == HIGH) {
 		Serial.println("Connection Lost");
 		digitalWrite(13, LOW);
