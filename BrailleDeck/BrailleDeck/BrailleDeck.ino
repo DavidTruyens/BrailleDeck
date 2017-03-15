@@ -26,6 +26,12 @@ Pin 2 is not used
 
 */
 
+#include "Wire.h"
+#include "Adafruit_LiquidCrystal.h"
+
+// Connect via i2c, default address #0 (A0-A2 not jumpered)
+Adafruit_LiquidCrystal lcd(0);
+
 int Spacepin = 8;
 int Enterpin = 4;
 int Backpin = 5;
@@ -34,8 +40,10 @@ int Keypins[6] = { 4,5,7,9,11,10 };
 const int PowerTwo[6] = { 1,2,4,8,16,32 };
 
 //full list of characters; but specials are not working, so they're replaced with # as well as blanks 
-//char BailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq#â?ê-u(v#îöë#xèç#û.ü)z=à#ôwï#yùé";
-char BailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq##?#-u(v#####x####.#)z=###w##y##";
+//char BrailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq#â?ê-u(v#îöë#xèç#û.ü)z=à#ôwï#yùé";
+char BrailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq##?#-u(v#####x####.#)z=###w##y##";
+char BrailleABCaps[65] = "A,B'K;L#CIF#MSP#E:H*O!R#DJG@NTQ##?#-U(V#####x####.#)Z=###W##Y##";
+char BrailleNumbers[65] = "1#2#####396#####5#8#####407#####################################";
  
 void setup() {
 	// put your setup code here, to run once:
@@ -43,6 +51,10 @@ void setup() {
 	digitalWrite(13, LOW);
 	Serial.begin(9600);
 
+	lcd.begin(20, 4);
+	// Print a message to the LCD.
+	lcd.print("Brailledeck");
+	
 	for (int PinNr = 4; PinNr <= 11; PinNr++) {
 		pinMode(PinNr, INPUT_PULLUP);
 	}
@@ -62,13 +74,16 @@ void setup() {
 	}
 	Serial.println("");
 	Serial.println("connected!");
-
+	lcd.clear();
 }
 
 bool Active = false;
  
 int EnterPreviousState = HIGH;
 int BackPreviousState = HIGH;
+bool Caps = false;
+bool CapsPermanent = false;
+bool Number = false;
 
 void loop() {
 	//Check connection
@@ -84,7 +99,8 @@ void loop() {
 
 }
 
-
+int RowNR = 0;
+int PosNR = 0;
 
 void CheckButtons() {
 	bool ButtonTrigger = true;
@@ -131,26 +147,70 @@ void CheckButtons() {
 	int BrailleIndex = 0;
 
 	for (BrailleCounter = 0; BrailleCounter <= 5; BrailleCounter++) {
-		Serial.print(KeyRecordings[BrailleCounter]);
+		//Serial.print(KeyRecordings[BrailleCounter]);
 		BrailleIndex = BrailleIndex + KeyRecordings[BrailleCounter] * PowerTwo[BrailleCounter];
-		Serial.print(",");
-		Serial.println(BrailleIndex);
+		//Serial.print(",");
+		//Serial.println(BrailleIndex);
 	}
 
 	if (BrailleIndex == 0) {
 		Serial.print(" ");
+		lcd.print(" ");
+		PosNR++;
+		CapsPermanent = false;
+		Number = false;
 	}
 	else if (SpaceRecording == 1) {
 		BrailleIndex--;
-		/*Serial.print("Braille index: ");
-		Serial.println(BrailleIndex);*/
-		Serial.print(BailleABC[BrailleIndex]);
+		Serial.print("Braille index: ");
+		Serial.println(BrailleIndex);
+		if (BrailleIndex == 39) {
+			Caps = true;
+		}
+		else if (BrailleIndex == 23) {
+			CapsPermanent = true;
+		}
+		else if (BrailleIndex == 59) {
+			Number = true;
+		}
+		else {
+			if (Caps) {
+				Serial.print(BrailleABCaps[BrailleIndex]);
+				lcd.print(BrailleABCaps[BrailleIndex]);
+				Caps = false;
+			}
+			else if (CapsPermanent) {
+				Serial.print(BrailleABCaps[BrailleIndex]);
+				lcd.print(BrailleABCaps[BrailleIndex]);
+			}
+			else if (Number) {
+				Serial.print(BrailleNumbers[BrailleIndex]);
+				lcd.print(BrailleNumbers[BrailleIndex]);
+			}
+			else {
+				Serial.print(BrailleABC[BrailleIndex]);
+				lcd.print(BrailleABC[BrailleIndex]);
+			}
+		PosNR++;
+		}
 	}
 	else if (BrailleIndex==1){
 		Serial.println("");		
+		RowNR++;
+		PosNR = 0;
+		lcd.setCursor(PosNR,RowNR);
 	}
 	else if (BrailleIndex == 2) {
 		Serial.print("BACK");
+		PosNR--;
+		lcd.setCursor(PosNR, RowNR);
+		lcd.print(" ");
+		lcd.setCursor(PosNR, RowNR);
+	}
+	if (PosNR == 20) {
+		RowNR++;
+		PosNR = 0;
+		lcd.setCursor(PosNR, RowNR);
 	}
 }
 
