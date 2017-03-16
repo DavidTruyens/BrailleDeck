@@ -40,6 +40,8 @@ Pin 2 is not used
 
 #include "Wire.h"
 #include "Adafruit_LiquidCrystal.h"
+#include <SPI.h>
+#include <SD.h>
 
 // Connect via i2c, default address #0 (A0-A2 not jumpered)
 Adafruit_LiquidCrystal lcd(0);
@@ -53,36 +55,44 @@ Adafruit_LiquidCrystal lcd(0);
 int Spacepin = 16;
 int ConnectionPin = 15;
 int Keypins[6] = { 5,6,9,10,11,12 };
+int chipSelect = 17;
+int Uppin = 14;
+int Downpin = 18;
 
 const int PowerTwo[6] = { 1,2,4,8,16,32 };
 
 //full list of characters; but specials are not working, so they're replaced with # as well as blanks 
 //char BrailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq#â?ê-u(v#îöë#xèç#û.ü)z=à#ôwï#yùé";
-char BrailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq##?#-u(v#####x####.#)z=###w##y##";
-char BrailleABCaps[65] = "A,B'K;L#CIF#MSP#E:H*O!R#DJG@NTQ##?#-U(V#####x####.#)Z=###W##Y##";
-char BrailleNumbers[65] = "1#2#####396#####5#8#####407#####################################";
+const char BrailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq##?#-u(v#####x####.#)z=###w##y##";
+const char BrailleABCaps[65] = "A,B'K;L#CIF#MSP#E:H*O!R#DJG@NTQ##?#-U(V#####X####.#)Z=###W##Y##";
+const char BrailleNumbers[65] = "1#2#####396#####5#8#####407#####################################";
  
 void setup() {
 	// put your setup code here, to run once:
 	pinMode(13, OUTPUT);
 	digitalWrite(13, LOW);
 	Serial.begin(9600);
+	while (!Serial);
+	Serial.println("Serial Started");
 
 	lcd.begin(20, 4);
 	// Print a message to the LCD.
 	lcd.print("Brailledeck");
+	Serial.println("lcd started");
 	
-	for (int PinNr = 4; PinNr <= 11; PinNr++) {
-		pinMode(PinNr, INPUT_PULLUP);
+	for (int PinNr = 0; PinNr <= 5; PinNr++) {
+		pinMode(Keypins[PinNr], INPUT_PULLUP);
 	}
+	pinMode(Spacepin, INPUT_PULLUP);
+	pinMode(ConnectionPin, INPUT_PULLUP);
 
 	Serial.println("Waiting for connection");
 	bool connected = false;
 	int connectorcheck = HIGH;
 	while (!connected) {
-		connectorcheck = digitalRead(6);
+		connectorcheck = digitalRead(ConnectionPin);
 		if (connectorcheck == HIGH) {
-			Serial.print(".");
+			//Serial.print(".");
 		}
 		else {
 			connected = true;
@@ -104,7 +114,7 @@ bool CapsPermanent = false;
 bool Number = false;
 
 void loop() {
-	CheckConnection();
+	//CheckConnection();
 
 	if (Active) {
 		CheckButtons();
@@ -116,6 +126,7 @@ void loop() {
 
 int RowNR = 0;
 int PosNR = 0;
+
 void CheckButtons() {
 	bool ButtonTrigger = true;
 	int KeyRecordings[6] = { 0,0,0,0,0,0 };
@@ -134,8 +145,8 @@ void CheckButtons() {
 		SpaceButton = digitalRead(Spacepin);
 
 		if (SpaceButton == LOW) {
-			/*Serial.print("spacebuttonstate: ");
-			Serial.println(SpaceButton);*/
+			//Serial.print("spacebuttonstate: ");
+			//Serial.println(SpaceButton);
 			SpaceRecording = 1;
 			ButtonPressed = true;
 		}
@@ -162,9 +173,12 @@ void CheckButtons() {
 
 	for (BrailleCounter = 0; BrailleCounter <= 5; BrailleCounter++) {
 		//Serial.print(KeyRecordings[BrailleCounter]);
+		//delay(1);
 		BrailleIndex = BrailleIndex + KeyRecordings[BrailleCounter] * PowerTwo[BrailleCounter];
 		//Serial.print(",");
+		//delay(1);
 		//Serial.println(BrailleIndex);
+		//delay(1);
 	}
 
 	if (BrailleIndex == 0) {
@@ -176,8 +190,8 @@ void CheckButtons() {
 	}
 	else if (SpaceRecording == 1) {
 		BrailleIndex--;
-		Serial.print("Braille index: ");
-		Serial.println(BrailleIndex);
+		//Serial.print("Braille index: ");
+		//Serial.println(BrailleIndex);
 		if (BrailleIndex == 39) {
 			Caps = true;
 		}
@@ -246,13 +260,19 @@ bool CheckActivity() {
 }
 
 int ConnectionChecker = HIGH;
+int ConnectionPrevState = HIGH;
 void CheckConnection() {
 	ConnectionChecker = digitalRead(ConnectionPin);
-	if (ConnectionChecker == HIGH) {
-		Serial.println("Connection Lost");
-		digitalWrite(13, LOW);
-	}
-	else {
-		digitalWrite(13, HIGH);
+	if (ConnectionChecker != ConnectionPrevState) {
+		ConnectionPrevState = ConnectionChecker;
+
+		if (ConnectionChecker == HIGH) {
+			Serial.println("Connection Lost");
+			delay(100);
+			digitalWrite(13, LOW);
+		}
+		else {
+			digitalWrite(13, HIGH);
+		}
 	}
 }
