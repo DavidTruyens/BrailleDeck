@@ -171,10 +171,6 @@ void loop() {
 	}
 }
 
-int RowNR = 0;
-int PosNR = 0;
-int CharLeft = 20;
-
 void CheckButtons() {
 	bool ButtonTrigger = true;
 	int KeyRecordings[6] = { 0,0,0,0,0,0 };
@@ -229,65 +225,92 @@ void CheckButtons() {
 		//delay(1);
 	}
 
-	if (BrailleIndex == 0) {
+	Printing(BrailleIndex, SpaceRecording);
+}
+
+int RowNR = 0;
+int PosNR = 0;
+String LastWord="";
+
+void Printing(int BrIndex, int Space) {
+	if (BrIndex == 0) {
+		LastWord = "";
 		Serial.print(" ");
 		lcd.print(" ");
 		PosNR++;
 		CapsPermanent = false;
 		Number = false;
 	}
-	else if (SpaceRecording == 1) {
-		BrailleIndex--;
+	else if (Space == 1) {
+		BrIndex--;
 		//Serial.print("Braille index: ");
 		//Serial.println(BrailleIndex);
-		if (BrailleIndex == 39) {
+		if (BrIndex == 39) {
 			Caps = true;
 		}
-		else if (BrailleIndex == 23) {
+		else if (BrIndex == 23) {
 			CapsPermanent = true;
 		}
-		else if (BrailleIndex == 59) {
+		else if (BrIndex == 59) {
 			Number = true;
 		}
 		else {
 			if (Caps) {
-				Serial.print(BrailleABCaps[BrailleIndex]);
-				lcd.print(BrailleABCaps[BrailleIndex]);
+				Serial.print(BrailleABCaps[BrIndex]);
+				lcd.print(BrailleABCaps[BrIndex]);
+				LastWord += BrailleABCaps[BrIndex];
 				Caps = false;
 			}
 			else if (CapsPermanent) {
-				Serial.print(BrailleABCaps[BrailleIndex]);
-				lcd.print(BrailleABCaps[BrailleIndex]);
+				Serial.print(BrailleABCaps[BrIndex]);
+				lcd.print(BrailleABCaps[BrIndex]);
+				LastWord += BrailleABCaps[BrIndex];
 			}
 			else if (Number) {
-				Serial.print(BrailleNumbers[BrailleIndex]);
-				lcd.print(BrailleNumbers[BrailleIndex]);
+				Serial.print(BrailleNumbers[BrIndex]);
+				lcd.print(BrailleNumbers[BrIndex]);
+				LastWord += BrailleNumbers[BrIndex];
 			}
 			else {
-				Serial.print(BrailleABC[BrailleIndex]);
-				lcd.print(BrailleABC[BrailleIndex]);
+				Serial.print(BrailleABC[BrIndex]);
+				lcd.print(BrailleABC[BrIndex]);
+				LastWord += BrailleABC[BrIndex];
 			}
-		PosNR++;
+			PosNR++;
 		}
 	}
-	else if (BrailleIndex==1){
-		Serial.println("");		
+	else if (BrIndex == 1) {
+		Serial.println("");
 		RowNR++;
 		PosNR = 0;
-		lcd.setCursor(PosNR,RowNR);
+		LastWord = "";
+		lcd.setCursor(PosNR, RowNR);
 	}
-	else if (BrailleIndex == 2) {
+	else if (BrIndex == 2) {
 		Serial.print("BACK");
 		PosNR--;
+		LastWord.remove(LastWord.length() - 1); 
 		lcd.setCursor(PosNR, RowNR);
 		lcd.print(" ");
 		lcd.setCursor(PosNR, RowNR);
 	}
-	if (PosNR == 20) {
+	if (PosNR == LCDChar) {
 		RowNR++;
 		PosNR = 0;
 		lcd.setCursor(PosNR, RowNR);
 	}
+	else if (PosNR == 1) {
+		Serial.println("first position word");
+		if (LastWord.length() > 1) {
+			lcd.setCursor(LCDChar - int(LastWord.length()) + 1, RowNR-1);
+			for (int l = 1; l <= LastWord.length() - 1; l++) {
+				lcd.print(" ");
+			}
+		}
+		lcd.setCursor(0, RowNR);
+		lcd.print(LastWord);
+	}
+	Serial.println(LastWord.length());
 }
 
 int Activitytest = HIGH;
