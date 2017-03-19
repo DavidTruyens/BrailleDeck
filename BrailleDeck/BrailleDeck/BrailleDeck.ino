@@ -13,15 +13,16 @@ Perkings PinNr			->		Uno PinNr			M0 PinNr
 	Key1		= 1		->		4					5
 	Key2		= 3		->		5					6
 	Key3		= 5		->		7					9
-	Key4		= 7		->		9					10
-	Key5		= 9		->		11					11
-	Key6		= 8		->		10					12
+	Key4		= 7		->		9					11
+	Key5		= 9		->		11					12
+	Key6		= 8		->		10					A3/17
 	Space		= 6		->		8					A2/16
 	Conection	= 4		->		6					A1/15
 	GND			= 10	->		GND					GND
 	
 LCD and RTC			SDA and SLC
 SD Card				SCK, MOSI and MISO
+					Chip Select						10
 
 Buttons
 	UP							-					A3/17
@@ -38,13 +39,23 @@ Pin 2 is not used
 
 */
 
+#include <RTClib.h>
 #include "Wire.h"
 #include "Adafruit_LiquidCrystal.h"
 #include <SPI.h>
 #include <SD.h>
 
-// Connect via i2c, default address #0 (A0-A2 not jumpered)
+// LCD Variables Connect via i2c, default address #0 (A0-A2 not jumpered)
 Adafruit_LiquidCrystal lcd(0);
+int LCDChar = 20;
+int LCDLines = 4;
+
+// SD Variables
+File myFile;
+
+// RTC Variables
+RTC_PCF8523 rtc;
+char daysOfTheWeek[7][12] = { "Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag" };
 
 //Uno Pins
 //int Spacepin = 8;
@@ -54,8 +65,8 @@ Adafruit_LiquidCrystal lcd(0);
 //M0 Pins
 int Spacepin = 16;
 int ConnectionPin = 15;
-int Keypins[6] = { 5,6,9,10,11,12 };
-int chipSelect = 17;
+int Keypins[6] = { 5,6,9,11,12,17 };
+int chipSelect = 10;
 int Uppin = 14;
 int Downpin = 18;
 
@@ -75,11 +86,47 @@ void setup() {
 	while (!Serial);
 	Serial.println("Serial Started");
 
-	lcd.begin(20, 4);
-	// Print a message to the LCD.
+	// Starting LCD
+	lcd.begin(LCDChar, LCDLines);
 	lcd.print("Brailledeck");
 	Serial.println("lcd started");
+
+	// Starting RTC
+	if (!rtc.begin()) {
+		Serial.println("Couldn't find RTC");
+		while (1);
+	}
+
+	// Starting SD Card
+	Serial.print("Initializing SD card...");
+	if (!SD.begin(10)) {
+		Serial.println("initialization failed!");
+		return;
+	}
+	Serial.println("initialization done.");
+
+	//Creating SD file
+	if (SD.exists("example.txt")) {
+		Serial.println("example.txt exists.");
+	}
+	else {
+		Serial.println("example.txt doesn't exist.");
+	}
+
+	// open a new file and immediately close it:
+	Serial.println("Creating example.txt...");
+	myFile = SD.open("example.txt", FILE_WRITE);
 	
+	// Getting weekday and writing to file
+	DateTime now = rtc.now();
+	String weekday = daysOfTheWeek[now.dayOfTheWeek()];
+	Serial.print("Vandaag is het ");
+	Serial.println(weekday);
+	myFile.print("Vandaag is het ");
+	myFile.println(weekday);
+	myFile.close();
+	
+	//Setting Perkings pin inputs
 	for (int PinNr = 0; PinNr <= 5; PinNr++) {
 		pinMode(Keypins[PinNr], INPUT_PULLUP);
 	}
@@ -126,6 +173,7 @@ void loop() {
 
 int RowNR = 0;
 int PosNR = 0;
+int CharLeft = 20;
 
 void CheckButtons() {
 	bool ButtonTrigger = true;
