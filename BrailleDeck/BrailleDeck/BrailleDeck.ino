@@ -45,15 +45,17 @@ Pin 2 is not used
 #include <SPI.h>
 #include <SD.h>
 
-// Connect via i2c, default address #0 (A0-A2 not jumpered)
+// LCD Variables Connect via i2c, default address #0 (A0-A2 not jumpered)
 Adafruit_LiquidCrystal lcd(0);
+int LCDChar = 20;
+int LCDLines = 4;
 
 // SD Variables
 File myFile;
 
 // RTC Variables
 RTC_PCF8523 rtc;
-char daysOfTheWeek[7][12] = { "Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday" };
+char daysOfTheWeek[7][12] = { "Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag" };
 
 //Uno Pins
 //int Spacepin = 8;
@@ -85,7 +87,7 @@ void setup() {
 	Serial.println("Serial Started");
 
 	// Starting LCD
-	lcd.begin(20, 4);
+	lcd.begin(LCDChar, LCDLines);
 	lcd.print("Brailledeck");
 	Serial.println("lcd started");
 
@@ -115,11 +117,12 @@ void setup() {
 	Serial.println("Creating example.txt...");
 	myFile = SD.open("example.txt", FILE_WRITE);
 	
-	// Getting weekday
+	// Getting weekday and writing to file
 	DateTime now = rtc.now();
 	String weekday = daysOfTheWeek[now.dayOfTheWeek()];
-	Serial.print("today is ");
+	Serial.print("Vandaag is het ");
 	Serial.println(weekday);
+	myFile.print("Vandaag is het ");
 	myFile.println(weekday);
 	myFile.close();
 	
@@ -170,6 +173,7 @@ void loop() {
 
 int RowNR = 0;
 int PosNR = 0;
+int CharLeft = 20;
 
 void CheckButtons() {
 	bool ButtonTrigger = true;
