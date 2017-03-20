@@ -225,19 +225,12 @@ void CheckButtons() {
 		//delay(1);
 	}
 
-	Printing(BrailleIndex, SpaceRecording);
+	Decoding(BrailleIndex, SpaceRecording);
 }
 
-int RowNR = 0;
-int PosNR = 0;
-String LastWord="";
-
-void Printing(int BrIndex, int Space) {
+void Decoding(int BrIndex, int Space) {
 	if (BrIndex == 0) {
-		LastWord = "";
-		Serial.print(" ");
-		lcd.print(" ");
-		PosNR++;
+		LCDWriting(1, '#');
 		CapsPermanent = false;
 		Number = false;
 	}
@@ -255,44 +248,61 @@ void Printing(int BrIndex, int Space) {
 			Number = true;
 		}
 		else {
-			if (Caps) {
-				Serial.print(BrailleABCaps[BrIndex]);
-				lcd.print(BrailleABCaps[BrIndex]);
-				LastWord += BrailleABCaps[BrIndex];
+			if (Caps||CapsPermanent) {
+				LCDWriting(0, BrailleABCaps[BrIndex]);
 				Caps = false;
 			}
-			else if (CapsPermanent) {
-				Serial.print(BrailleABCaps[BrIndex]);
-				lcd.print(BrailleABCaps[BrIndex]);
-				LastWord += BrailleABCaps[BrIndex];
-			}
 			else if (Number) {
-				Serial.print(BrailleNumbers[BrIndex]);
-				lcd.print(BrailleNumbers[BrIndex]);
-				LastWord += BrailleNumbers[BrIndex];
+				LCDWriting(0, BrailleNumbers[BrIndex]);
 			}
 			else {
-				Serial.print(BrailleABC[BrIndex]);
-				lcd.print(BrailleABC[BrIndex]);
-				LastWord += BrailleABC[BrIndex];
+				LCDWriting(0, BrailleABC[BrIndex]);
 			}
-			PosNR++;
 		}
 	}
 	else if (BrIndex == 1) {
-		Serial.println("");
+		LCDWriting(2, '#');
+	}
+	else if (BrIndex == 2) {
+		LCDWriting(3, '#');
+	}
+}
+
+int RowNR = 0;
+int PosNR = 0;
+String LastWord = "";
+char Typed[50][20];
+int LineNr = 0;
+
+void LCDWriting(int SEBack,char inPut) {
+	if (SEBack == 1) {
+		LastWord = "";
+		lcd.print(" ");
+		PosNR++;
+		Typed[LineNr][PosNR] = ' ';
+		Serial.print(" ");
+	}
+	else if (SEBack == 2) {
 		RowNR++;
+		LineNr++;
 		PosNR = 0;
 		LastWord = "";
 		lcd.setCursor(PosNR, RowNR);
+		Serial.println("");
 	}
-	else if (BrIndex == 2) {
+	else if (SEBack == 3) {
 		Serial.print("BACK");
 		PosNR--;
-		LastWord.remove(LastWord.length() - 1); 
+		LastWord.remove(LastWord.length() - 1);
 		lcd.setCursor(PosNR, RowNR);
 		lcd.print(" ");
 		lcd.setCursor(PosNR, RowNR);
+	}
+	else {
+		Serial.print(inPut);
+		lcd.print(inPut);
+		LastWord += inPut;
+		PosNR++;
 	}
 	if (PosNR == LCDChar) {
 		RowNR++;
@@ -302,13 +312,14 @@ void Printing(int BrIndex, int Space) {
 	else if (PosNR == 1) {
 		Serial.println("first position word");
 		if (LastWord.length() > 1) {
-			lcd.setCursor(LCDChar - int(LastWord.length()) + 1, RowNR-1);
+			lcd.setCursor(LCDChar - int(LastWord.length()) + 1, RowNR - 1);
 			for (int l = 1; l <= LastWord.length() - 1; l++) {
 				lcd.print(" ");
 			}
 		}
 		lcd.setCursor(0, RowNR);
 		lcd.print(LastWord);
+		PosNR = LastWord.length();
 	}
 	Serial.println(LastWord.length());
 }
