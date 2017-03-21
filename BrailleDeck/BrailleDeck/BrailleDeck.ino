@@ -78,6 +78,8 @@ const char BrailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq##?#-u(v#####x####.#
 const char BrailleABCaps[65] = "A,B'K;L#CIF#MSP#E:H*O!R#DJG@NTQ##?#-U(V#####X####.#)Z=###W##Y##";
 const char BrailleNumbers[65] = "1#2#####396#####5#8#####407#####################################";
  
+char Typed[50][20];
+
 void setup() {
 	// put your setup code here, to run once:
 	pinMode(13, OUTPUT);
@@ -149,6 +151,9 @@ void setup() {
 	Serial.println("");
 	Serial.println("connected!");
 	lcd.clear();
+
+	TypedInitialization();
+
 }
 
 bool Active = false;
@@ -271,10 +276,11 @@ void Decoding(int BrIndex, int Space) {
 int RowNR = 0;
 int PosNR = 0;
 String LastWord = "";
-char Typed[50][20];
 int LineNr = 0;
+int LastLine = 0;
 
 void LCDWriting(int SEBack,char inPut) {
+	//if Space
 	if (SEBack == 1) {
 		LastWord = "";
 		lcd.print(" ");
@@ -282,35 +288,64 @@ void LCDWriting(int SEBack,char inPut) {
 		Typed[LineNr][PosNR] = ' ';
 		Serial.print(" ");
 	}
+	//if Enter
 	else if (SEBack == 2) {
 		RowNR++;
 		LineNr++;
 		PosNR = 0;
 		LastWord = "";
+		if (RowNR == 4) {
+			PrintArray(LineNr - 3, LineNr);
+			RowNR = 3;
+		}
 		lcd.setCursor(PosNR, RowNR);
 		Serial.println("");
 	}
+	//if BackSpace
 	else if (SEBack == 3) {
+		if (PosNR == 0) {
+			RowNR--;
+			Serial.println("Typed: ");
+			for (int i = 0; i <= LineNr-1;i++) {
+				Serial.println("");
+				Serial.print(i);
+				Serial.print(" ");
+				for (int y = 0; y <= 19; y++) {
+					Serial.print(Typed[i][y]);
+				}
+			}
+			for (PosNR = 19; PosNR >= 0; PosNR--) {
+				if (Typed[LineNr - 1][PosNR] != ' ') {
+					break;
+				}
+			}
+			PosNR++;
+			lcd.setCursor(PosNR, RowNR);
+		}
 		Serial.print("BACK");
 		PosNR--;
 		LastWord.remove(LastWord.length() - 1);
+		Typed[LineNr][PosNR] = ' ';
 		lcd.setCursor(PosNR, RowNR);
 		lcd.print(" ");
 		lcd.setCursor(PosNR, RowNR);
 	}
+	//normal character input
 	else {
-		Serial.print(inPut);
 		lcd.print(inPut);
 		LastWord += inPut;
+		Typed[LineNr][PosNR] = inPut;
 		PosNR++;
+		Serial.print(inPut);
 	}
+	//wordwrapping
 	if (PosNR == LCDChar) {
 		RowNR++;
 		PosNR = 0;
 		lcd.setCursor(PosNR, RowNR);
 	}
 	else if (PosNR == 1) {
-		Serial.println("first position word");
+		//Serial.println("first position word");
 		if (LastWord.length() > 1) {
 			lcd.setCursor(LCDChar - int(LastWord.length()) + 1, RowNR - 1);
 			for (int l = 1; l <= LastWord.length() - 1; l++) {
@@ -321,9 +356,37 @@ void LCDWriting(int SEBack,char inPut) {
 		lcd.print(LastWord);
 		PosNR = LastWord.length();
 	}
-	Serial.println(LastWord.length());
+	//Serial.println(LastWord.length());
 }
 
+//char testar[6][21] = { "test12346allo       ","nogeentje           ","bladibla","nogwat","doedidoe","jawaddedadde" };
+
+void TypedInitialization() {
+	for (int i=0; i <= 49; i++) {
+		for (int j = 0; j <= 19; j++) {
+			Typed[i][j] = ' ';
+		}
+	}
+}
+void PrintArray(int Afrom, int Ato) {
+	int k = 0;
+	Serial.println("Printing array");
+	for (int i = Afrom; i <= Ato; i++) {
+		lcd.setCursor(0, k);
+		for (int j = 0; j <= 19; j++) {
+			if (isWhitespace(Typed[i][j])) {
+				lcd.print(" ");
+			}
+			else {
+				lcd.print(Typed[i][j]);
+			}
+			
+			Serial.print(Typed[i][j]);
+		}
+		k++;
+		Serial.println("");
+	}
+}
 int Activitytest = HIGH;
 bool CheckActivity() {
 	for (int i = 0; i <= 5; i++) {
