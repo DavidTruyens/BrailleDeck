@@ -288,6 +288,7 @@ void LCDWriting(int SEBack,char inPut) {
 		Typed[LineNr][PosNR] = ' ';
 		Serial.print(" ");
 	}
+	
 	//if Enter
 	else if (SEBack == 2) {
 		RowNR++;
@@ -301,35 +302,63 @@ void LCDWriting(int SEBack,char inPut) {
 		lcd.setCursor(PosNR, RowNR);
 		Serial.println("");
 	}
+	
 	//if BackSpace
 	else if (SEBack == 3) {
+		Serial.println("");
+		Serial.print("pos number start: ");
+		Serial.println(PosNR);
+
+		//Return to previous line
 		if (PosNR == 0) {
-			RowNR--;
-			Serial.println("Typed: ");
-			for (int i = 0; i <= LineNr-1;i++) {
+			Serial.println("LINEBACK");
+			if (LineNr == 0) {
+				lcd.setCursor(0, 0);
+			}
+			else {
+				RowNR--;
+				LineNr--;
+
+				Serial.println("Typed: ");
+				for (int i = 0; i <= LineNr; i++) {
+					Serial.print(i);
+					Serial.print(" ");
+					for (int y = 0; y <= 19; y++) {
+						Serial.print(Typed[i][y]);
+					}
+					Serial.println("");
+				}
 				Serial.println("");
-				Serial.print(i);
-				Serial.print(" ");
-				for (int y = 0; y <= 19; y++) {
-					Serial.print(Typed[i][y]);
+				
+				for (PosNR = 19; PosNR >= 0; PosNR--) {
+					if (Typed[LineNr][PosNR] != ' ') {
+						break;
+					}
 				}
+				PosNR++;
+				lcd.setCursor(PosNR, RowNR);
+
 			}
-			for (PosNR = 19; PosNR >= 0; PosNR--) {
-				if (Typed[LineNr - 1][PosNR] != ' ') {
-					break;
-				}
+			if (LineNr >= 3) {
+				PrintArray(LineNr - 3, LineNr);
+				RowNR = 3;
+				lcd.setCursor(PosNR, RowNR);
 			}
-			PosNR++;
-			lcd.setCursor(PosNR, RowNR);
 		}
-		Serial.print("BACK");
-		PosNR--;
-		LastWord.remove(LastWord.length() - 1);
-		Typed[LineNr][PosNR] = ' ';
-		lcd.setCursor(PosNR, RowNR);
-		lcd.print(" ");
-		lcd.setCursor(PosNR, RowNR);
+		//Remove last character
+		else {
+			Serial.println("BACK");
+			PosNR--;
+			lcd.setCursor(PosNR, RowNR);
+			lcd.print(" ");
+			lcd.setCursor(PosNR, RowNR);
+			LastWord.remove(LastWord.length() - 1);
+			Typed[LineNr][PosNR] = ' ';
+		}		
+		Serial.print("pos nummer end: ");
+		Serial.println(PosNR);
 	}
+	
 	//normal character input
 	else {
 		lcd.print(inPut);
@@ -337,29 +366,44 @@ void LCDWriting(int SEBack,char inPut) {
 		Typed[LineNr][PosNR] = inPut;
 		PosNR++;
 		Serial.print(inPut);
-	}
-	//wordwrapping
-	if (PosNR == LCDChar) {
-		RowNR++;
-		PosNR = 0;
-		lcd.setCursor(PosNR, RowNR);
-	}
-	else if (PosNR == 1) {
-		//Serial.println("first position word");
-		if (LastWord.length() > 1) {
-			lcd.setCursor(LCDChar - int(LastWord.length()) + 1, RowNR - 1);
-			for (int l = 1; l <= LastWord.length() - 1; l++) {
-				lcd.print(" ");
+
+		//wordwrapping
+		if (PosNR == LCDChar) {
+			RowNR++;
+			LineNr++;
+			PosNR = 0;
+			lcd.setCursor(PosNR, RowNR);
+		}
+		else if (PosNR == 1) {
+			//Serial.println("first position word");
+			if (LastWord.length() > 1) {
+				lcd.setCursor(LCDChar - int(LastWord.length()) + 1, RowNR - 1);
+				for (int l = 1; l <= LastWord.length() - 1; l++) {
+					lcd.print(" ");
+				}
+				for (int m = LCDChar - int(LastWord.length()) + 1; m <= LCDChar; m++) {
+					Typed[LineNr - 1][m] = ' ';
+				}
+			}
+			lcd.setCursor(0, RowNR);
+			lcd.print(LastWord);
+			for (int r = 0; r <= LastWord.length(); r++) {
+				Typed[LineNr][r] = LastWord.charAt(r);
+			}
+			
+			PosNR = LastWord.length();
+			Serial.println("");
+			Serial.println("word wraping check array: ");
+			for (int x = 0; x <= LineNr; x++) {
+				for (int y = 0; y <= 19; y++) {
+					Serial.print(Typed[x][y]);
+				}
+				Serial.println("");
 			}
 		}
-		lcd.setCursor(0, RowNR);
-		lcd.print(LastWord);
-		PosNR = LastWord.length();
 	}
-	//Serial.println(LastWord.length());
+	
 }
-
-//char testar[6][21] = { "test12346allo       ","nogeentje           ","bladibla","nogwat","doedidoe","jawaddedadde" };
 
 void TypedInitialization() {
 	for (int i=0; i <= 49; i++) {
@@ -368,15 +412,17 @@ void TypedInitialization() {
 		}
 	}
 }
+
 void PrintArray(int Afrom, int Ato) {
 	int k = 0;
 	Serial.println("Printing array");
 	for (int i = Afrom; i <= Ato; i++) {
 		lcd.setCursor(0, k);
 		for (int j = 0; j <= 19; j++) {
-			if (isWhitespace(Typed[i][j])) {
+			if (!isAscii(Typed[i][j])) {
 				lcd.print(" ");
 			}
+			
 			else {
 				lcd.print(Typed[i][j]);
 			}
