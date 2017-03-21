@@ -291,6 +291,10 @@ void LCDWriting(int SEBack,char inPut) {
 	
 	//if Enter
 	else if (SEBack == 2) {
+		if (PosNR == 1) {
+			Typed[LineNr][PosNR] = ' ';
+		}
+
 		RowNR++;
 		LineNr++;
 		PosNR = 0;
@@ -422,17 +426,16 @@ void PrintArray(int Afrom, int Ato) {
 			if (!isAscii(Typed[i][j])) {
 				lcd.print(" ");
 			}
-			
 			else {
 				lcd.print(Typed[i][j]);
 			}
-			
 			Serial.print(Typed[i][j]);
 		}
 		k++;
 		Serial.println("");
 	}
 }
+
 int Activitytest = HIGH;
 bool CheckActivity() {
 	for (int i = 0; i <= 5; i++) {
