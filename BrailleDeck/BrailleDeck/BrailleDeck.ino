@@ -9,15 +9,15 @@ Breadboard pin's (using the RS50 connector numbers)
 10 GND
 4 is pulled low when the board is connected (so it becomes a second gnd)
 
-Perkings PinNr			->		Uno PinNr			M0 PinNr	Color
-	Key1		= 1		->		4					5			White
-	Key2		= 3		->		5					6			Grey
-	Key3		= 5		->		7					9			Brown
-	Key4		= 7		->		9					11			Green
-	Key5		= 9		->		11					12			Purlple
-	Key6		= 8		->		10					A3/17		Orange
-	Space		= 6		->		8					A2/16		Yellow
-	Conection	= 4		->		6					A1/15		Blue
+Perkings PinNr			->		Uno PinNr			M0 PinNr	Color		M0V2
+	Key1		= 1		->		4					5			White		5
+	Key2		= 3		->		5					6			Grey		6
+	Key3		= 5		->		7					9			Brown		11
+	Key4		= 7		->		9					11			Green		17
+	Key5		= 9		->		11					12			Purlple		15
+	Key6		= 8		->		10					A3/17		Orange		16
+	Space		= 6		->		8					A2/16		Yellow		12
+	Conection	= 4		->		6					A1/15		Blue		9
 	GND			= 10	->		GND					GND			Black
 	
 LCD and RTC			SDA and SCL		SDA Purple, SCL Yellow
@@ -64,12 +64,22 @@ char daysOfTheWeek[7][12] = { "Zondag", "Maandag", "Dinsdag", "Woensdag", "Donde
 //int Keypins[6] = { 4,5,7,9,11,10 };
 
 //M0 Pins
+/*
 int Spacepin = 16;
 int ConnectionPin = 15;
 int Keypins[6] = { 5,6,9,11,12,17 };
 int chipSelect = 10;
 int Uppin = 14;
 int Downpin = 18;
+*/
+
+//M0 Pins V2
+int Spacepin = 12;
+int ConnectionPin = 9;
+int Keypins[6] = { 5,6,11,17,15,16 };
+int chipSelect = 10;
+int Uppin = 18;
+int Downpin = 19;
 
 const int PowerTwo[6] = { 1,2,4,8,16,32 };
 
