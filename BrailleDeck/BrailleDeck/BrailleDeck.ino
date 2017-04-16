@@ -9,26 +9,26 @@ Breadboard pin's (using the RS50 connector numbers)
 10 GND
 4 is pulled low when the board is connected (so it becomes a second gnd)
 
-Perkings PinNr			->		Uno PinNr			M0 PinNr
-	Key1		= 1		->		4					5
-	Key2		= 3		->		5					6
-	Key3		= 5		->		7					9
-	Key4		= 7		->		9					11
-	Key5		= 9		->		11					12
-	Key6		= 8		->		10					A3/17
-	Space		= 6		->		8					A2/16
-	Conection	= 4		->		6					A1/15
-	GND			= 10	->		GND					GND
+Perkings PinNr			->		Uno PinNr			M0 PinNr	Color
+	Key1		= 1		->		4					5			White
+	Key2		= 3		->		5					6			Grey
+	Key3		= 5		->		7					9			Brown
+	Key4		= 7		->		9					11			Green
+	Key5		= 9		->		11					12			Purlple
+	Key6		= 8		->		10					A3/17		Orange
+	Space		= 6		->		8					A2/16		Yellow
+	Conection	= 4		->		6					A1/15		Blue
+	GND			= 10	->		GND					GND			Black
 	
-LCD and RTC			SDA and SLC
+LCD and RTC			SDA and SCL		SDA Purple, SCL Yellow
 SD Card				SCK, MOSI and MISO
 					Chip Select						10
 
 Buttons
-	UP							-					A0/14
-	Down						-					A4/18
+	UP							-					A4/18	Green
+	Down						-					A5/19	Orange
 
-Buzzer							-					A5/19
+Buzzer							-					? 
 
 These key's use the 4 pin as their GND
 Enter = 1 (Shared with Key1)
@@ -77,7 +77,7 @@ const int PowerTwo[6] = { 1,2,4,8,16,32 };
 //char BrailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq#â?ê-u(v#îöë#xèç#û.ü)z=à#ôwï#yùé";
 const char BrailleABC[65] = "a,b'k;l#cif#msp#e:h*o!r#djg@ntq##?#-u(v#####x####.#)z=###w##y##";
 const char BrailleABCaps[65] = "A,B'K;L#CIF#MSP#E:H*O!R#DJG@NTQ##?#-U(V#####X####.#)Z=###W##Y##";
-const char BrailleNumbers[65] = "1#2#####396#####5#8#####407#####################################";
+const char BrailleNumbers[65] = "1#2#####396#####5#8#####407###########*###########.#############";
  
 char Typed[50][20];
 
