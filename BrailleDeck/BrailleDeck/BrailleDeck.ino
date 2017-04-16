@@ -25,7 +25,7 @@ SD Card				SCK, MOSI and MISO
 					Chip Select						10
 
 Buttons
-	UP							-					A3/17
+	UP							-					A0/14
 	Down						-					A4/18
 
 Buzzer							-					A5/19
@@ -52,6 +52,7 @@ int LCDLines = 4;
 
 // SD Variables
 File myFile;
+File Brailleoutput;
 
 // RTC Variables
 RTC_PCF8523 rtc;
@@ -114,13 +115,22 @@ void setup() {
 	else {
 		Serial.println("example.txt doesn't exist.");
 	}
-
+	// get date for file name
+	DateTime now = rtc.now();
+	String filename = "BrailleOmzet";
+	filename += now.day();
+	filename += now.month();
+	filename += now.year();
+	filename += ".txt";
+	Serial.println(filename);
+	Brailleoutput = SD.open(filename);
+	
 	// open a new file and immediately close it:
 	Serial.println("Creating example.txt...");
 	myFile = SD.open("example.txt", FILE_WRITE);
 	
 	// Getting weekday and writing to file
-	DateTime now = rtc.now();
+	
 	String weekday = daysOfTheWeek[now.dayOfTheWeek()];
 	Serial.print("Vandaag is het ");
 	Serial.println(weekday);
@@ -134,6 +144,8 @@ void setup() {
 	}
 	pinMode(Spacepin, INPUT_PULLUP);
 	pinMode(ConnectionPin, INPUT_PULLUP);
+	pinMode(Uppin, INPUT_PULLUP);
+	pinMode(Downpin, INPUT_PULLUP);
 
 	Serial.println("Waiting for connection");
 	bool connected = false;
@@ -166,13 +178,14 @@ bool CapsPermanent = false;
 bool Number = false;
 
 void loop() {
-	//CheckConnection();
+	CheckConnection();
 
 	if (Active) {
 		CheckButtons();
 	}
 	else {
 		Active = CheckActivity();
+
 	}
 }
 
