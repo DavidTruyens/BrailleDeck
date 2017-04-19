@@ -91,12 +91,17 @@ const char BrailleNumbers[65] = "1#2#####396#####5#8#####407###########*########
  
 char Typed[50][20];
 
+bool debugMode = false;
+
 void setup() {
 	// put your setup code here, to run once:
 	pinMode(13, OUTPUT);
 	digitalWrite(13, LOW);
 	Serial.begin(9600);
+	if (debugMode) {
 	while (!Serial);
+	}
+
 	Serial.println("Serial Started");
 
 	// Starting LCD
@@ -403,7 +408,7 @@ void LCDWriting(int SEBack,char inPut) {
 		}
 		else if (PosNR == 1) {
 			//Serial.println("first position word");
-			if (LastWord.length() > 1) {
+			if (LastWord.length() > 1 && LastWord.length() < LCDChar) {
 				lcd.setCursor(LCDChar - int(LastWord.length()) + 1, RowNR - 1);
 				for (int l = 1; l <= LastWord.length() - 1; l++) {
 					lcd.print(" ");
@@ -411,14 +416,14 @@ void LCDWriting(int SEBack,char inPut) {
 				for (int m = LCDChar - int(LastWord.length()) + 1; m <= LCDChar; m++) {
 					Typed[LineNr - 1][m] = ' ';
 				}
+				lcd.setCursor(0, RowNR);
+				lcd.print(LastWord);
+				for (int r = 0; r <= LastWord.length(); r++) {
+					Typed[LineNr][r] = LastWord.charAt(r);
+				}
+
+				PosNR = LastWord.length();
 			}
-			lcd.setCursor(0, RowNR);
-			lcd.print(LastWord);
-			for (int r = 0; r <= LastWord.length(); r++) {
-				Typed[LineNr][r] = LastWord.charAt(r);
-			}
-			
-			PosNR = LastWord.length();
 			Serial.println("");
 			Serial.println("word wraping check array: ");
 			for (int x = 0; x <= LineNr; x++) {
