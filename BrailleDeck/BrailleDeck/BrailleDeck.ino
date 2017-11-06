@@ -315,6 +315,9 @@ int DownbuttonState = 0;
 int PrevUpState = HIGH;
 int PrevDownState = HIGH;
 
+
+int UpClicks = 0;
+
 void CheckUpDown() {
 
 	UpbuttonState = digitalRead(Uppin);
@@ -329,6 +332,11 @@ void CheckUpDown() {
 		if (PrevUpState == LOW) {
 			PrevUpState = HIGH;
 			Serial.println("Upbutton pressed");
+			UpClicks++;
+			
+			if (LineNr >= 4) {
+				PrintArray(LineNr - 4-UpClicks, LineNr-UpClicks);
+			}
 			delay(200);
 		}
 	}
@@ -343,6 +351,12 @@ void CheckUpDown() {
 		if (PrevDownState == LOW) {
 			PrevDownState = HIGH;
 			Serial.println("Downbutton pressed");
+			if (UpClicks > 0) {
+				UpClicks--;
+			}
+			if (LineNr >= 4) {
+				PrintArray(LineNr - 4 - UpClicks, LineNr - UpClicks);
+			}
 			delay(200);
 		}
 	}
