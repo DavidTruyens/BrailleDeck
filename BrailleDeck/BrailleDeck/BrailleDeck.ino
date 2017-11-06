@@ -58,11 +58,6 @@ File Brailleoutput;
 RTC_PCF8523 rtc;
 char daysOfTheWeek[7][12] = { "Zondag", "Maandag", "Dinsdag", "Woensdag", "Donderdag", "Vrijdag", "Zaterdag" };
 
-//Uno Pins
-//int Spacepin = 8;
-//int ConnectionPin = 6;
-//int Keypins[6] = { 4,5,7,9,11,10 };
-
 //M0 Pins
 /*
 int Spacepin = 16;
@@ -78,8 +73,8 @@ int Spacepin = 12;
 int ConnectionPin = 9;
 int Keypins[6] = { 5,6,11,17,15,16 };
 int chipSelect = 10;
-int Uppin = 18;
-int Downpin = 19;
+int Uppin = 19;
+int Downpin = 18;
 
 const int PowerTwo[6] = { 1,2,4,8,16,32 };
 
@@ -109,7 +104,7 @@ void setup() {
 	lcd.print("Brailledeck");
 	Serial.println("lcd started");
 
-	// Starting RTC
+	// Starting RTC (Real Time Clock)
 	if (!rtc.begin()) {
 		Serial.println("Couldn't find RTC");
 		while (1);
@@ -119,7 +114,10 @@ void setup() {
 	Serial.print("Initializing SD card...");
 	if (!SD.begin(10)) {
 		Serial.println("initialization failed!");
-		return;
+		lcd.setCursor(0, 2);
+		lcd.print("Geen SD kaart");
+		delay(2000);
+		//return;
 	}
 	Serial.println("initialization done.");
 
@@ -159,12 +157,17 @@ void setup() {
 	}
 	pinMode(Spacepin, INPUT_PULLUP);
 	pinMode(ConnectionPin, INPUT_PULLUP);
+
+	//Setting Up and Down button inputs
 	pinMode(Uppin, INPUT_PULLUP);
 	pinMode(Downpin, INPUT_PULLUP);
 
+	//Debug settings
 	Serial.println("Waiting for connection");
 	bool connected = false;
 	int connectorcheck = HIGH;
+
+	//Perkins connection check
 	while (!connected) {
 		connectorcheck = digitalRead(ConnectionPin);
 		if (connectorcheck == HIGH) {
@@ -194,13 +197,13 @@ bool Number = false;
 
 void loop() {
 	CheckConnection();
+	CheckUpDown();
 
 	if (Active) {
 		CheckButtons();
 	}
 	else {
 		Active = CheckActivity();
-
 	}
 }
 
@@ -306,6 +309,44 @@ int PosNR = 0;
 String LastWord = "";
 int LineNr = 0;
 int LastLine = 0;
+
+int UpbuttonState = 0;
+int DownbuttonState = 0;
+int PrevUpState = HIGH;
+int PrevDownState = HIGH;
+
+void CheckUpDown() {
+
+	UpbuttonState = digitalRead(Uppin);
+	DownbuttonState = digitalRead(Downpin);
+	
+	if (UpbuttonState == LOW) {
+		if (PrevUpState == HIGH) {
+			PrevUpState = LOW;
+		}
+	}
+	else {
+		if (PrevUpState == LOW) {
+			PrevUpState = HIGH;
+			Serial.println("Upbutton pressed");
+			delay(200);
+		}
+	}
+		
+	
+	if (DownbuttonState == LOW) {
+		if (PrevDownState == HIGH) {
+			PrevDownState = LOW;
+		}
+	}
+	else {
+		if (PrevDownState == LOW) {
+			PrevDownState = HIGH;
+			Serial.println("Downbutton pressed");
+			delay(200);
+		}
+	}
+}
 
 void LCDWriting(int SEBack,char inPut) {
 	//if Space
